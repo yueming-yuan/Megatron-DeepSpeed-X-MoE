@@ -31,7 +31,7 @@ from megatron.core.enums import ModelType
 from megatron.optimizer import get_megatron_optimizer
 from megatron.initialize import initialize_megatron
 from megatron.initialize import write_args_to_tensorboard
-from megatron.initialize import set_jit_fusion_options
+#from megatron.initialize import set_jit_fusion_options
 from megatron.optimizer_param_scheduler import OptimizerParamScheduler
 from megatron.model import DistributedDataParallel as LocalDDP
 from megatron.utils import check_adlr_autoresume_termination
@@ -122,8 +122,8 @@ def pretrain(train_valid_test_dataset_provider,
     initialize_megatron(extra_args_provider=extra_args_provider,
                         args_defaults=args_defaults)
     # Set pytorch JIT layer fusion options and warmup JIT functions.
-    if get_accelerator().device_name() == 'cuda':
-        set_jit_fusion_options()
+    #if get_accelerator().device_name() == 'cuda':
+    #    set_jit_fusion_options()
 
     # Adjust the startup time so it reflects the largest value.
     # This will be closer to what scheduler will see (outside of
@@ -237,6 +237,7 @@ def pretrain(train_valid_test_dataset_provider,
         iteration = args.iteration
 
     config = core_transformer_config_from_args(args)
+    '''
     if args.do_valid:
         prefix = f'iteration {iteration} on {args.eval_iters * args.global_batch_size}-sample draw from validation set'
         evaluate_and_print_results(prefix, forward_step_func,
@@ -251,6 +252,7 @@ def pretrain(train_valid_test_dataset_provider,
                                    iteration, process_non_loss_data_func, config,
                                    verbose=True, write_to_tensorboard=not args.skip_train, test=True)
     return model
+    '''
 
 
 def update_train_iters(args):

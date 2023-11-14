@@ -25,6 +25,9 @@ from deepspeed.accelerator import get_accelerator
 import deepspeed
 from deepspeed.ops.op_builder.builder import OpBuilder
 
+from mpi4py import MPI
+import socket
+
 is_rocm_pytorch = OpBuilder.is_rocm_pytorch()
 
 
@@ -196,10 +199,32 @@ def setup_deepspeed_random_and_activation_checkpointing(args):
         synchronize=args.synchronize_each_layer,
         profile=args.profile_backward)
 
+def _set_env_variables(args):
+    # Call the init process
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    world_size = comm.Get_size()
+    master_addr = args.master_addr
+    if rank == 0:
+        hostname = socket.gethostname()
+        master_addr = socket.gethostbyname(hostname)
+    master_addr = comm.bcast(master_addr, root = 0)
+
+    proc_name = MPI.Get_processor_name()
+    all_procs = comm.allgather(proc_name)
+    local_rank = sum([i == proc_name for i in all_procs[:rank]])
+    os.environ['RANK'] = str(rank)
+    os.environ['WORLD_SIZE'] = str(world_size)
+    os.environ['LOCAL_RANK'] = str(local_rank)
+    os.environ['MASTER_ADDR'] = master_addr
+    os.environ['MASTER_PORT'] = str(29500)
+    print("world_size, rank, master_addr, local_rank:", world_size, rank, master_addr, local_rank)
+
 
 def _initialize_distributed():
     """Initialize torch.distributed and core model parallel."""
     args = get_args()
+    _set_env_variables(args)
     device_count = get_accelerator().device_count()
     if torch.distributed.is_initialized():
 
@@ -224,14 +249,12 @@ def _initialize_distributed():
             get_accelerator().set_device(device) # only do so when device_count > 0
 
     # Call the init process
+    print("args values:", args)
     if args.deepspeed or args.ds_inference:
         deepspeed.init_distributed()
     else:
-        if not torch.distributed.is_initialized():
-            torch.distributed.init_process_group(
-                backend=args.distributed_backend,
-                world_size=args.world_size, rank=args.rank,
-                timeout=timedelta(minutes=args.distributed_timeout_minutes))
+        print("before init_process_group:" )
+        torch.distributed.init_process_group(backend=args.distributed_backend,world_size=args.world_size,timeout=timedelta(minutes=10))
 
     # Set the tensor model-parallel, pipeline model-parallel, and
     # data-parallel communicators.
