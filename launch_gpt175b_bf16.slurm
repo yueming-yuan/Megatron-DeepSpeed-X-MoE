@@ -4,7 +4,7 @@
 #SBATCH -J gpt175b_megatron
 #SBATCH -o logs/gpt175b_megatron_16N-%j.o
 #SBATCH -e logs/gpt175b_megatron_16N-%j.e
-#SBATCH -t 01:00:00
+#SBATCH -t 00:20:00
 #SBATCH -p batch
 #SBATCH -N 16
 
@@ -16,7 +16,7 @@ module load rocm/5.7.0
 export ROCM_HOME=/opt/rocm-5.7.0
 export LD_PRELOAD="/usr/lib64/libcrypto.so /usr/lib64/libssh.so.4 /usr/lib64/libssl.so.1.1"
 module load PrgEnv-gnu
-module load gcc/11.2.0
+module load gcc/12.2.0
 
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1

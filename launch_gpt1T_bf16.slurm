@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -A MED106
+#SBATCH -A STF218
 #SBATCH -J gpt1T_megatron
 #SBATCH -o logs/gpt1T_megatron_128N_4x128-z1-fa2-%j.o
 #SBATCH -e logs/gpt1T_megatron_128N_4x128-z1-fa2-%j.e
@@ -13,6 +13,7 @@ source /lustre/orion/world-shared/stf218/sajal/miniconda3-frontier/bin/activate
 #conda activate /lustre/orion/stf006/world-shared/irl1/flash2
 conda activate /lustre/orion/world-shared/stf218/sajal/flash2-copy
 module load rocm/5.7.0
+module load gcc/12.2.0
 
 export ROCM_HOME=/opt/rocm-5.7.0
 
