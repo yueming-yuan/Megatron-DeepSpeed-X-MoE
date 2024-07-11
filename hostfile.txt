@@ -1,0 +1,2 @@
+frontier00003 slots=8
+frontier00004 slots=8

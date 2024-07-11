@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH -A STF218
-#SBATCH -J gpt175b_megatron
+#SBATCH -J gpt22b_megatron
 #SBATCH -o logs/gpt22b_megatron_2N_1x8_fa-%j.o
 #SBATCH -e logs/gpt22b_megatron_2N_1x8_fa-%j.e
-#SBATCH -t 01:00:00
+#SBATCH -t 00:20:00
 #SBATCH -p batch
 #SBATCH -N 2
 
