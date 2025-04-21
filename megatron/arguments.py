@@ -60,11 +60,17 @@ def parse_args(extra_args_provider=None, ignore_unknown_args=False):
         args = parser.parse_args()
 
     # Args from environment
-    #args.rank = int(os.getenv('RANK', '0'))
-    #args.world_size = int(os.getenv("WORLD_SIZE", '1'))
-    comm = MPI.COMM_WORLD
-    args.rank = comm.Get_rank()
-    args.world_size = comm.Get_size()
+    args.using_mpi = not args.using_torchrun
+    
+    if args.using_mpi:
+        print("using mpi")
+        comm = MPI.COMM_WORLD
+        args.rank = comm.Get_rank()
+        args.world_size = comm.Get_size()
+    else:
+        print("using torchrun")
+        args.rank = int(os.getenv('RANK', '0'))
+        args.world_size = int(os.getenv("WORLD_SIZE", '1'))
 
     return args
 
@@ -587,6 +593,8 @@ def _add_network_size_args(parser):
                        help='Number of decoder transformer layers.')
     group.add_argument('--num-experts', type=int, nargs='+', default=[1,],
                            help='number of experts list, MoE related.')
+    group.add_argument('--num-shared-experts', type=int, nargs='+', default=[0,],
+                           help='number of experts list, MoE related.')
     group.add_argument('--mlp-type', type=str, default='standard',
                            help='Only applicable when num-experts > 1, accepts [standard, residual]')
     group.add_argument('--topk', type=int, default=1,
@@ -658,6 +666,12 @@ def _add_network_size_args(parser):
                        help='Untie embeddings and output weights.'),
     group.add_argument('--embedding-weights-in-fp32', action='store_true',
                        help='Cast word embedding weights to fp32 before embedding fwd.'),
+    group.add_argument('--use-uneven-all-to-all', action='store_true',
+                       help='Cast word embedding weights to fp32 before embedding fwd.'),
+    group.add_argument('--use-rbd', action='store_true',
+                       help='Cast word embedding weights to fp32 before embedding fwd.'),
+    group.add_argument('--rbd-mesh-size', type=int, default=8,
+                       help='local size.')
     group.add_argument('--master-addr', type=str, help='Master address provided as input')
     return parser
 
@@ -913,6 +927,10 @@ def _add_training_args(parser):
                        help='Disable pipeline parallelism')
     group.add_argument('--use-tutel', action='store_true',
                        help='Use Tutel optimization for MoE')
+    group.add_argument('--use-pft', action='store_true',
+                       help='Use Tutel optimization for MoE')
+    group.add_argument('--use-tutel-moe', action='store_true',
+                       help='Use Tutel MoE')
     group.add_argument('--inference', action='store_true',
                        help='Very basic inference mode: not allocating optim/lr - requires ZERO_STAGE=0')
 
@@ -1099,6 +1117,9 @@ def _add_distributed_args(parser):
     group.add_argument('--enable-expert-tensor-parallelism', action='store_true',
                         default=False,
                         help="use tensor parallelism for expert layers in MoE")
+    group.add_argument('--enable-expert-sequence-parallelism', action='store_true',
+                        default=False,
+                        help="use tensor parallelism for expert layers in MoE")
     group.add_argument('--pipeline-model-parallel-size', type=int, default=1,
                        help='Degree of pipeline model parallelism.')
     group.add_argument('--pipeline-model-parallel-split-rank',
@@ -1158,6 +1179,10 @@ def _add_distributed_args(parser):
                        'affects the encoder embedding.)')
     group.add_argument('--use-distributed-optimizer', action='store_true',
                        help='Use distributed optimizer.')
+    group.add_argument('--using-torchrun', action='store_true',
+                       default=False)
+    group.add_argument('--profile-name', type=str, default=None,
+                       help='Path to mounted input dataset')
 
     return parser
 
@@ -1475,6 +1500,16 @@ def _add_activation_checkpoint_args(parser):
     group.add_argument('--synchronize-each-layer', action='store_true',
                        help='does a synchronize at the beginning and end of each checkpointed layer.')
     group.add_argument('--profile-backward', action='store_true',
+                       help='Enables backward pass profiling for checkpointed layers.')
+
+    # MoE checkpointing control
+    group.add_argument('--checkpoint-intermediate', action='store_true',
+                       help='Enables backward pass profiling for checkpointed layers.')
+    group.add_argument('--checkpoint-layernorm', action='store_true',
+                       help='Enables backward pass profiling for checkpointed layers.')
+    group.add_argument('--checkpoint-attention', action='store_true',
+                       help='Enables backward pass profiling for checkpointed layers.')
+    group.add_argument('--checkpoint-gating', action='store_true',
                        help='Enables backward pass profiling for checkpointed layers.')
     return parser
 

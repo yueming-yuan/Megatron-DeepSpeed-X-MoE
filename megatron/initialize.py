@@ -224,7 +224,8 @@ def _set_env_variables(args):
 def _initialize_distributed():
     """Initialize torch.distributed and core model parallel."""
     args = get_args()
-    _set_env_variables(args)
+    if args.using_mpi:
+        _set_env_variables(args)
     device_count = get_accelerator().device_count()
     if torch.distributed.is_initialized():
 
