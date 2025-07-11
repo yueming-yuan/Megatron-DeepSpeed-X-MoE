@@ -30,7 +30,7 @@ import subprocess
 
 from torch import nn
 import torch.nn.functional as F
-from mpi4py import MPI
+
 import os
 from datetime import timedelta
 
@@ -60,6 +60,7 @@ default_pg_timeout = timedelta(minutes=1)
 #     print("using_mpi=", using_mpi)
 
 def _set_env_variables(args):
+    from mpi4py import MPI
     # Call the init process
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()

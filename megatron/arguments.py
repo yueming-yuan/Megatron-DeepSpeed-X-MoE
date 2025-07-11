@@ -17,8 +17,6 @@ from tools.retro.utils import get_args_path as get_retro_args_path
 
 from megatron.core.transformer import TransformerConfig
 
-from mpi4py import MPI
-
 def parse_args(extra_args_provider=None, ignore_unknown_args=False):
     """Parse all arguments."""
     parser = argparse.ArgumentParser(description='Megatron-LM Arguments',
@@ -63,6 +61,7 @@ def parse_args(extra_args_provider=None, ignore_unknown_args=False):
     args.using_mpi = not args.using_torchrun
     
     if args.using_mpi:
+        from mpi4py import MPI
         print("using mpi")
         comm = MPI.COMM_WORLD
         args.rank = comm.Get_rank()

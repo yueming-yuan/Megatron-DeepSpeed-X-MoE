@@ -25,8 +25,7 @@ from deepspeed.accelerator import get_accelerator
 import deepspeed
 from deepspeed.ops.op_builder.builder import OpBuilder
 
-from mpi4py import MPI
-import socket
+
 
 is_rocm_pytorch = OpBuilder.is_rocm_pytorch()
 
@@ -200,6 +199,8 @@ def setup_deepspeed_random_and_activation_checkpointing(args):
         profile=args.profile_backward)
 
 def _set_env_variables(args):
+    from mpi4py import MPI
+    import socket
     # Call the init process
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
