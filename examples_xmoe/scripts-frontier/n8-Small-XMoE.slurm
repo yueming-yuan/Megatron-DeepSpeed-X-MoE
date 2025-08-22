@@ -23,7 +23,7 @@ export OMP_NUM_THREADS=1
 export CHECKPOINT_PATH=checkpoint/small
 export VOCAB_FILE=../data/gpt2-vocab.json
 export MERGE_FILE=../data/gpt2-merges.txt
-export DATA_PATH=../data/my-xmoe_text_document
+export DATA_PATH=../data/my-gpt2_text_document
 
 NUM_GPUS=8
 BATCH_SIZE=4
@@ -323,7 +323,6 @@ srun -N 1 -n8 -c2 --ntasks-per-node=8 --gpus-per-node=8 --gpu-bind=closest \
         ${deepspeed_options} \
         --master-addr=$MASTER_ADDR \
         --zero-stage 1 \
-        --use-flash-attn \
         --use-flash-attn-v2 \
         2>&1 | tee n8-Small-XMoE.log
 echo ${run_cmd}
